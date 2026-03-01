@@ -23,6 +23,12 @@ const Icon = ({ name, size, className }) => {
         target: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
         'chevron-up': '<path d="m18 15-6-6-6 6"/>',
         'chevron-down': '<path d="m6 9 6 6 6-6"/>',
+        settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+        upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>',
+        sun: '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>',
+        moon: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
+        x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+        'file-text': '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>',
     };
     const svgHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${paths[name] || ''}</svg>`;
     return html`<span className=${className || ''} dangerouslySetInnerHTML=${{ __html: svgHTML }} />`;
@@ -217,6 +223,33 @@ const GameImport = ({ onImport }) => {
     const [games, setGames] = useState([]);
     const [collapsed, setCollapsed] = useState(false);
     const [selectedGame, setSelectedGame] = useState(null);
+    const pgnFileRef = useRef(null);
+
+    const handlePgnUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            const pgn = evt.target.result;
+            try {
+                const testGame = new Chess();
+                const loaded = testGame.load_pgn(pgn);
+                if (!loaded && testGame.history().length === 0) {
+                    alert('Invalid PGN file. Could not parse any moves.');
+                    return;
+                }
+                setSelectedGame({ source: 'pgn', data: pgn });
+                setCollapsed(true);
+                onImport({ source: 'pgn', data: { pgn } });
+            } catch (err) {
+                console.error('PGN parse error:', err);
+                alert('Failed to parse PGN file: ' + err.message);
+            }
+        };
+        reader.readAsText(file);
+        // Reset so the same file can be re-uploaded
+        e.target.value = '';
+    };
 
     const fetchLichess = async () => {
         const response = await fetch("https://lichess.org/api/games/user/" + username + "?max=10", {
@@ -327,6 +360,21 @@ const GameImport = ({ onImport }) => {
                     ${loading ? html`<div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>` : 'Fetch'}
                 </button>
             </div>
+
+            <div className="flex items-center gap-2">
+                <div className="flex-1 h-px bg-white/5"></div>
+                <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest">or</span>
+                <div className="flex-1 h-px bg-white/5"></div>
+            </div>
+
+            <input type="file" accept=".pgn" ref=${pgnFileRef} onChange=${handlePgnUpload} className="hidden" />
+            <button
+                onClick=${() => pgnFileRef.current && pgnFileRef.current.click()}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.08] hover:border-white/10 transition-all text-gray-400 hover:text-white active:scale-[0.98]"
+            >
+                <${Icon} name="upload" size=${14} />
+                <span className="text-[10px] font-black uppercase tracking-widest">Upload PGN File</span>
+            </button>
 
             ${games.length > 0 && html`
                 <div className="space-y-1.5 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
@@ -481,6 +529,98 @@ const MoveList = ({ moveNotations, mainLineNotations, currentMoveIndex, onGoToMo
     `;
 };
 
+/**
+ * Settings Panel - overlay modal for depth selection and theme toggle
+ */
+const SettingsPanel = ({ isOpen, onClose, manualDepth, setManualDepth, darkMode, setDarkMode }) => {
+    if (!isOpen) return null;
+
+    const depthOptions = [
+        { value: 0, label: 'Auto' },
+        { value: 10, label: '10' },
+        { value: 14, label: '14' },
+        { value: 18, label: '18 (default)' },
+        { value: 22, label: '22' },
+        { value: 26, label: '26' },
+        { value: 30, label: '30 (deep)' },
+    ];
+
+    return html`
+        <div className="fixed inset-0 z-[999] flex items-center justify-center" onClick=${onClose}>
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+            <div className="relative w-[340px] max-w-[90vw] glass rounded-2xl border border-white/10 shadow-2xl p-6 flex flex-col gap-5" onClick=${(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
+                        <${Icon} name="settings" size=${18} className="text-chess-accent" />
+                        Settings
+                    </h3>
+                    <button onClick=${onClose} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-gray-500 hover:text-white">
+                        <${Icon} name="x" size=${18} />
+                    </button>
+                </div>
+
+                <div className="h-px bg-white/5"></div>
+
+                <div className="flex flex-col gap-2">
+                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Analysis Depth</label>
+                    <p className="text-[9px] text-gray-600 font-medium">Auto mode uses depth 18 normally, depth 30 for endgames (< 10 pieces)</p>
+                    <div className="grid grid-cols-4 gap-1.5 mt-1">
+                        ${depthOptions.map(opt => html`
+                            <button
+                                key=${opt.value}
+                                onClick=${() => setManualDepth(opt.value)}
+                                className=${`px-2 py-2 rounded-lg text-[10px] font-bold transition-all border ${manualDepth === opt.value
+            ? 'bg-chess-accent/20 border-chess-accent/40 text-chess-accent'
+            : 'bg-white/[0.03] border-white/5 text-gray-400 hover:bg-white/[0.08] hover:text-white'}`}
+                            >${opt.label}</button>
+                        `)}
+                    </div>
+                </div>
+
+                <div className="h-px bg-white/5"></div>
+
+                <div className="flex items-center justify-between">
+                    <div>
+                        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Theme</label>
+                        <p className="text-[9px] text-gray-600 font-medium mt-0.5">${darkMode ? 'Dark mode' : 'Light mode'}</p>
+                    </div>
+                    <button
+                        onClick=${() => setDarkMode(!darkMode)}
+                        className=${`relative w-14 h-7 rounded-full transition-all border ${darkMode
+            ? 'bg-chess-accent/20 border-chess-accent/30'
+            : 'bg-yellow-500/20 border-yellow-500/30'}`}
+                    >
+                        <div className=${`absolute top-0.5 w-6 h-6 rounded-full flex items-center justify-center transition-all ${darkMode
+            ? 'left-0.5 bg-chess-dark text-chess-accent'
+            : 'left-[26px] bg-yellow-400 text-yellow-900'}`}>
+                            <${Icon} name=${darkMode ? 'moon' : 'sun'} size=${12} />
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+};
+
+/**
+ * Arrow Legend - explains what each arrow color means
+ */
+const ArrowLegend = ({ showArrows }) => {
+    if (!showArrows) return null;
+    return html`
+        <div className="flex items-center justify-center gap-4 flex-none">
+            <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded-sm" style=${{ background: 'rgba(129, 182, 76, 0.8)' }}></div>
+                <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Best Move</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded-sm" style=${{ background: 'rgba(82, 155, 235, 0.5)' }}></div>
+                <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Alternative</span>
+            </div>
+        </div>
+    `;
+};
+
 const App = () => {
     const [game, setGame] = useState(new Chess());
     const [history, setHistory] = useState([new Chess().fen()]);
@@ -500,6 +640,30 @@ const App = () => {
     const [variationHistory, setVariationHistory] = useState([]);
     const [isOnVariation, setIsOnVariation] = useState(false);
 
+    // Settings state
+    const [settingsOpen, setSettingsOpen] = useState(false);
+    const [manualDepth, setManualDepth] = useState(0); // 0 = auto
+    const [darkMode, setDarkMode] = useState(true);
+
+    // Background analysis state
+    const [analysisCache, setAnalysisCache] = useState({});
+    const [bgAnalysisProgress, setBgAnalysisProgress] = useState(0);
+    const [bgAnalysisTotal, setBgAnalysisTotal] = useState(0);
+    const bgAnalysisAbortRef = useRef(false);
+    const manualDepthRef = useRef(manualDepth);
+    manualDepthRef.current = manualDepth;
+
+    // Dark mode effect
+    useEffect(() => {
+        if (darkMode) {
+            document.body.classList.remove('light-mode');
+            document.body.classList.add('dark-mode');
+        } else {
+            document.body.classList.remove('dark-mode');
+            document.body.classList.add('light-mode');
+        }
+    }, [darkMode]);
+
     // Stockfish engine (lazy-loaded as Web Worker, persisted across renders)
     const stockfishRef = useRef(null);
 
@@ -516,7 +680,7 @@ const App = () => {
         }
     };
 
-    const runLocalEngine = (fen) => {
+    const runLocalEngine = (fen, depthOverride) => {
         return new Promise((resolve) => {
             const sf = getStockfish();
             if (!sf) { resolve(null); return; }
@@ -525,7 +689,9 @@ const App = () => {
             const fenBoard = fen.split(' ')[0];
             const pieceCount = fenBoard.replace(/[^a-zA-Z]/g, '').length;
             const isBlackToMove = fen.split(' ')[1] === 'b';
-            const searchDepth = pieceCount < 10 ? 30 : 18;
+            // Depth priority: depthOverride > manualDepthRef > auto
+            const currentManualDepth = depthOverride || manualDepthRef.current;
+            const searchDepth = currentManualDepth > 0 ? currentManualDepth : (pieceCount < 10 ? 30 : 18);
 
             let bestResult = null;
             const onMessage = (e) => {
@@ -544,7 +710,8 @@ const App = () => {
                         bestResult = {
                             type: mateMatch ? 'mate' : 'cp',
                             value: isBlackToMove ? -rawValue : rawValue,
-                            pv: pvMatch[1].split(' ')
+                            pv: pvMatch[1].split(' '),
+                            depth: searchDepth
                         };
                     }
                 }
@@ -568,6 +735,13 @@ const App = () => {
     };
 
     const runAnalysis = async (fen) => {
+        // Check cache first (from background analysis)
+        if (analysisCache[fen]) {
+            setEvaluation(analysisCache[fen]);
+            setStatus('Cached Analysis');
+            return;
+        }
+
         setStatus('Querying Cloud Engine...');
         setEvaluation(null);
 
@@ -578,11 +752,14 @@ const App = () => {
                 const data = await response.json();
                 if (data.pvs && data.pvs.length > 0) {
                     const topPv = data.pvs[0];
-                    setEvaluation({
+                    const evalResult = {
                         type: topPv.cp !== undefined ? 'cp' : 'mate',
                         value: topPv.cp !== undefined ? topPv.cp : topPv.mate,
                         pv: topPv.moves ? topPv.moves.split(' ') : []
-                    });
+                    };
+                    setEvaluation(evalResult);
+                    // Also cache cloud results
+                    setAnalysisCache(prev => ({ ...prev, [fen]: evalResult }));
                     setStatus('Cloud Analysis Ready');
                     return;
                 }
@@ -594,19 +771,52 @@ const App = () => {
         // Step 2: Fall back to local Stockfish
         const fenBoard = fen.split(' ')[0];
         const pieceCount = fenBoard.replace(/[^a-zA-Z]/g, '').length;
-        const searchDepth = pieceCount < 10 ? 30 : 18;
+        const currentManualDepth = manualDepthRef.current;
+        const searchDepth = currentManualDepth > 0 ? currentManualDepth : (pieceCount < 10 ? 30 : 18);
         setStatus(`Running Local Engine (Depth ${searchDepth})...`);
         try {
             const result = await runLocalEngine(fen);
             if (result) {
                 setEvaluation(result);
-                setStatus(`Local Engine (Depth ${searchDepth})`);
+                setAnalysisCache(prev => ({ ...prev, [fen]: result }));
+                setStatus(`Local Engine (Depth ${result.depth || searchDepth})`);
             } else {
                 setStatus('Engine unavailable');
             }
         } catch (e) {
             console.error("Local engine failed:", e);
             setStatus('Analysis failed');
+        }
+    };
+
+    // Background analysis: pre-analyze entire game at lower depth
+    const runBackgroundAnalysis = async (positions) => {
+        bgAnalysisAbortRef.current = false;
+        setBgAnalysisProgress(0);
+        setBgAnalysisTotal(positions.length);
+
+        for (let i = 0; i < positions.length; i++) {
+            if (bgAnalysisAbortRef.current) break;
+            const fen = positions[i];
+            // Skip if already cached
+            if (analysisCache[fen]) {
+                setBgAnalysisProgress(i + 1);
+                continue;
+            }
+
+            try {
+                // Use a lighter depth (12) for background to avoid blocking
+                const result = await runLocalEngine(fen, 12);
+                if (result && !bgAnalysisAbortRef.current) {
+                    setAnalysisCache(prev => ({ ...prev, [fen]: result }));
+                }
+            } catch (e) {
+                console.warn('Background analysis error for position', i, e);
+            }
+            setBgAnalysisProgress(i + 1);
+        }
+        if (!bgAnalysisAbortRef.current) {
+            setBgAnalysisTotal(0); // Signal completion
         }
     };
 
@@ -677,6 +887,9 @@ const App = () => {
 
     const handleImport = ({ source, data }) => {
         try {
+            // Abort any running background analysis
+            bgAnalysisAbortRef.current = true;
+
             const newGame = new Chess();
             const newHistory = [new Chess().fen()];
             const notations = [];
@@ -712,7 +925,11 @@ const App = () => {
             setVariationMoves([]);
             setVariationHistory([]);
             setIsOnVariation(false);
+            // Clear cache and start fresh background analysis
+            setAnalysisCache({});
             runAnalysis(newGame.fen());
+            // Start background analysis after a small delay to let the current position analyze first
+            setTimeout(() => runBackgroundAnalysis(newHistory), 500);
         } catch (e) {
             console.error("Import error:", e);
             alert("Failed to load game moves.");
@@ -778,61 +995,99 @@ const App = () => {
     };
 
     return html`
-        <div className="h-screen flex flex-col bg-[#0f0e0c] overflow-hidden">
+        <div className=${`h-screen flex flex-col overflow-hidden ${darkMode ? 'bg-[#0f0e0c]' : 'bg-[#f0ede8]'}`}>
             <${Header} />
-            <main className="flex-1 container mx-auto px-6 py-4 flex gap-6 max-w-7xl min-h-0">
+            <${SettingsPanel} isOpen=${settingsOpen} onClose=${() => setSettingsOpen(false)} manualDepth=${manualDepth} setManualDepth=${setManualDepth} darkMode=${darkMode} setDarkMode=${setDarkMode} />
+            <main className="flex-1 container mx-auto px-3 sm:px-6 py-2 sm:py-4 flex flex-col lg:flex-row gap-3 lg:gap-6 max-w-7xl min-h-0 overflow-y-auto lg:overflow-hidden">
                 <div className="flex-1 flex flex-col gap-3 min-h-0">
-                    <div className="flex items-center justify-between bg-white/[0.03] p-3 rounded-2xl border border-white/5 flex-none">
-                        <div className="flex items-center gap-3">
-                            <span className="text-xs font-black text-gray-500 uppercase tracking-widest">STATUS:</span>
-                            <span className="text-sm font-bold text-chess-accent uppercase tracking-widest">${status}</span>
+                    <div className="flex items-center justify-between bg-white/[0.03] p-2 sm:p-3 rounded-2xl border border-white/5 flex-none">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                            <span className="text-[10px] sm:text-xs font-black text-gray-500 uppercase tracking-widest">STATUS:</span>
+                            <span className="text-[10px] sm:text-sm font-bold text-chess-accent uppercase tracking-widest truncate max-w-[140px] sm:max-w-none">${status}</span>
                         </div>
-                        <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest bg-black/40 px-3 py-1.5 rounded-lg border border-white/5">
-                            Move ${Math.floor(currentMoveIndex / 2) + 1} / ${Math.floor((history.length - 1) / 2) + 1}
+                        <div className="flex items-center gap-2">
+                            <div className="text-[9px] sm:text-[10px] text-gray-500 font-bold uppercase tracking-widest bg-black/40 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-white/5">
+                                Move ${Math.floor(currentMoveIndex / 2) + 1} / ${Math.floor((history.length - 1) / 2) + 1}
+                            </div>
+                            <button 
+                                onClick=${() => setSettingsOpen(true)}
+                                className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors text-gray-500 hover:text-chess-accent"
+                                title="Settings"
+                            >
+                                <${Icon} name="settings" size=${16} />
+                            </button>
                         </div>
                     </div>
 
-                    <div className="flex gap-4 items-stretch flex-1 min-h-0">
-                        <${EvalBar} score=${evaluation} />
+                    <div className="flex gap-2 sm:gap-4 items-stretch flex-1 min-h-0">
+                        <div className="hidden sm:block">
+                            <${EvalBar} score=${evaluation} />
+                        </div>
                         
-                        <div className="flex-1 flex flex-col items-center gap-3 min-h-0">
-                            <div className="w-full max-w-[480px] bg-chess-dark rounded-2xl p-4 border border-white/10 shadow-2xl relative" ref=${(el) => { if (el) { const w = el.querySelector('.board-b72b1')?.offsetWidth; if (w && w !== boardSize) setBoardSize(w); } }}>
+                        <div className="flex-1 flex flex-col items-center gap-2 sm:gap-3 min-h-0">
+                            <div className="w-full max-w-[480px] bg-chess-dark rounded-2xl p-2 sm:p-4 border border-white/10 shadow-2xl relative" ref=${(el) => { if (el) { const w = el.querySelector('.board-b72b1')?.offsetWidth; if (w && w !== boardSize) setBoardSize(w); } }}>
                                 <${ChessboardComponent} fen=${game.fen()} onMove=${handleMove} lastMove=${lastMove} bestMove=${evaluation && evaluation.pv && evaluation.pv[0] && evaluation.pv[0].length >= 4 ? { from: evaluation.pv[0].substring(0, 2), to: evaluation.pv[0].substring(2, 4) } : null} getLegalMoves=${getLegalMoves} />
                                 <${BoardArrows} evaluation=${evaluation} showArrows=${showArrows} boardSize=${boardSize} />
                             </div>
+
+                            <${ArrowLegend} showArrows=${showArrows} />
                             
-                            <div className="flex items-center gap-1 bg-black/50 p-1.5 rounded-xl border border-white/10 flex-none">
-                                <button onClick=${() => goToMove(0)} className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors text-gray-500 hover:text-chess-accent">
-                                    <${Icon} name="chevrons-left" size=${18} />
+                            <div className="flex items-center gap-1 bg-black/50 p-1 sm:p-1.5 rounded-xl border border-white/10 flex-none">
+                                <button onClick=${() => goToMove(0)} className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors text-gray-500 hover:text-chess-accent">
+                                    <${Icon} name="chevrons-left" size=${16} />
                                 </button>
-                                <button onClick=${() => navigate(-1)} className="w-10 h-9 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors text-gray-500 hover:text-chess-accent">
-                                    <${Icon} name="chevron-left" size=${20} />
+                                <button onClick=${() => navigate(-1)} className="w-8 h-8 sm:w-10 sm:h-9 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors text-gray-500 hover:text-chess-accent">
+                                    <${Icon} name="chevron-left" size=${18} />
                                 </button>
-                                <div className="px-4 text-[10px] font-black text-gray-700 uppercase tracking-[0.3em] cursor-default border-x border-white/5">
+                                <div className="px-2 sm:px-4 text-[9px] sm:text-[10px] font-black text-gray-700 uppercase tracking-[0.2em] sm:tracking-[0.3em] cursor-default border-x border-white/5">
                                     Navigate
                                 </div>
-                                <button onClick=${() => navigate(1)} className="w-10 h-9 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors text-gray-500 hover:text-chess-accent">
-                                    <${Icon} name="chevron-right" size=${20} />
+                                <button onClick=${() => navigate(1)} className="w-8 h-8 sm:w-10 sm:h-9 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors text-gray-500 hover:text-chess-accent">
+                                    <${Icon} name="chevron-right" size=${18} />
                                 </button>
-                                <button onClick=${() => goToMove(history.length - 1)} className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors text-gray-500 hover:text-chess-accent">
-                                    <${Icon} name="chevrons-right" size=${18} />
+                                <button onClick=${() => goToMove(history.length - 1)} className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors text-gray-500 hover:text-chess-accent">
+                                    <${Icon} name="chevrons-right" size=${16} />
                                 </button>
                                 <button 
                                     onClick=${() => setShowArrows(!showArrows)}
-                                    className=${`w-9 h-9 flex items-center justify-center rounded-lg transition-colors ${showArrows ? 'bg-chess-accent/20 text-chess-accent' : 'text-gray-500 hover:text-white hover:bg-white/10'}`}
+                                    className=${`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg transition-colors ${showArrows ? 'bg-chess-accent/20 text-chess-accent' : 'text-gray-500 hover:text-white hover:bg-white/10'}`}
                                     title="Toggle arrows"
                                 >
-                                    <${Icon} name="trending-up" size=${16} />
+                                    <${Icon} name="trending-up" size=${14} />
                                 </button>
+                            </div>
+
+                            ${/** Mobile-only inline eval display */ ''}
+                            <div className="sm:hidden flex items-center justify-center gap-2 flex-none">
+                                ${evaluation ? html`
+                                    <div className=${`px-3 py-1 rounded-lg text-sm font-black font-mono ${evaluation.value >= 0 ? 'bg-white/10 text-white' : 'bg-gray-800 text-gray-400'}`}>
+                                        ${evaluation.type === 'mate' ? '#' + evaluation.value : (evaluation.value > 0 ? '+' : '') + (evaluation.value / 100).toFixed(1)}
+                                    </div>
+                                ` : html`<span className="text-[10px] font-bold text-gray-600">No eval</span>`}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="w-[380px] flex-none flex flex-col gap-3 min-h-0">
+                <div className="w-full lg:w-[380px] flex-none flex flex-col gap-3 min-h-0">
                     <${GameImport} onImport=${handleImport} />
 
-                    <div className="flex-1 glass rounded-2xl p-5 flex flex-col gap-3 border border-white/10 shadow-2xl min-h-0 overflow-hidden">
+                    ${bgAnalysisTotal > 0 ? html`
+                        <div className="flex items-center gap-3 p-3 glass rounded-2xl border border-white/5 flex-none">
+                            <div className="w-2 h-2 rounded-full bg-chess-accent animate-pulse"></div>
+                            <div className="flex-1">
+                                <div className="flex items-center justify-between mb-1">
+                                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Background Analysis</span>
+                                    <span className="text-[9px] font-bold text-chess-accent">${bgAnalysisProgress}/${bgAnalysisTotal}</span>
+                                </div>
+                                <div className="w-full h-1.5 bg-black/30 rounded-full overflow-hidden">
+                                    <div className="h-full bg-chess-accent rounded-full transition-all duration-300" style=${{ width: (bgAnalysisProgress / bgAnalysisTotal * 100) + '%' }}></div>
+                                </div>
+                            </div>
+                        </div>
+                    ` : null}
+
+                    <div className="flex-1 glass rounded-2xl p-3 sm:p-5 flex flex-col gap-3 border border-white/10 shadow-2xl min-h-0 overflow-hidden">
                         <div className="flex items-center justify-between">
                             <h3 className="text-sm font-black flex items-center gap-2 text-white uppercase tracking-tighter">
                                 <${Icon} name="zap" size=${18} className="text-chess-accent" />
@@ -881,10 +1136,10 @@ const App = () => {
                     navigator.clipboard.writeText(evaluation.pv.join(' '));
                 }
             }}
-                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.08] transition-all text-gray-500 hover:text-white active:scale-[0.98]"
+                                        className="flex-1 flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.08] transition-all text-gray-500 hover:text-white active:scale-[0.98]"
                                     >
                                         <${Icon} name="copy" size=${14} />
-                                        <span className="text-[10px] font-black uppercase tracking-widest">Copy Line</span>
+                                        <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest">Copy Line</span>
                                     </button>
                                     <button 
                                         onClick=${() => {
@@ -896,19 +1151,19 @@ const App = () => {
                     handleMove({ from, to });
                 }
             }}
-                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-chess-accent/10 border border-chess-accent/20 hover:bg-chess-accent/20 transition-all text-chess-accent active:scale-[0.98]"
+                                        className="flex-1 flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl bg-chess-accent/10 border border-chess-accent/20 hover:bg-chess-accent/20 transition-all text-chess-accent active:scale-[0.98]"
                                     >
                                         <${Icon} name="zap" size=${14} />
-                                        <span className="text-[10px] font-black uppercase tracking-widest">Play Best</span>
+                                        <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest">Play Best</span>
                                     </button>
                                 </div>
                             </div>
                         ` : html`
-                            <div className="flex flex-col items-center justify-center text-gray-600 text-sm py-16 text-center">
-                                <div className="w-20 h-20 bg-white/[0.03] rounded-full flex items-center justify-center mb-6 border border-white/5 shadow-inner">
-                                    <${Icon} name="target" size=${32} className="opacity-10" />
+                            <div className="flex flex-col items-center justify-center text-gray-600 text-sm py-8 sm:py-16 text-center">
+                                <div className="w-16 sm:w-20 h-16 sm:h-20 bg-white/[0.03] rounded-full flex items-center justify-center mb-4 sm:mb-6 border border-white/5 shadow-inner">
+                                    <${Icon} name="target" size=${28} className="opacity-10" />
                                 </div>
-                                <p className="max-w-[220px] leading-relaxed font-medium uppercase text-[10px] tracking-[0.3em] opacity-40">Make a move or import a game to begin analysis</p>
+                                <p className="max-w-[220px] leading-relaxed font-medium uppercase text-[9px] sm:text-[10px] tracking-[0.3em] opacity-40">Make a move or import a game to begin analysis</p>
                             </div>
                         `}
                     </div>

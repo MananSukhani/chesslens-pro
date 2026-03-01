@@ -145,3 +145,48 @@ body {
     border: 5px solid rgba(0, 0, 0, 0.25);
     border-radius: 50%;
 }
+
+/* ===== Light Mode ===== */
+body.light-mode {
+    background-color: #f0ede8;
+    color: #1a1816;
+}
+
+body.light-mode .glass {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+body.light-mode .eval-bar-container {
+    background: #e8e5e0;
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+body.light-mode .eval-bar-fill {
+    background: linear-gradient(to top, #1a1816, #3a3632);
+}
+
+body.light-mode .board-b72b1 {
+    border-color: #c8c4bf !important;
+}
+
+body.light-mode .notation-322f9 {
+    color: #666 !important;
+}
+
+/* ===== Mobile Responsive ===== */
+@media (max-width: 640px) {
+    body {
+        overflow-y: auto;
+        height: auto;
+        min-height: 100vh;
+    }
+
+    .board-b72b1 {
+        border-radius: 8px;
+    }
+
+    .eval-bar-container {
+        min-height: 150px;
+    }
+}
