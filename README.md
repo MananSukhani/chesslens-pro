@@ -11,16 +11,14 @@ A premium, browser-based chess analysis tool that combines **Lichess Cloud Engin
 
 ## ✨ Features
 
-- **🌐 Dual Engine Analysis** — Queries the Lichess Cloud Eval API first (instant, cached positions), then falls back to a local Stockfish WASM engine running in a Web Worker.
-- **📊 Live Evaluation Bar** — Visual eval bar showing advantage in real-time, normalized to White's perspective.
-- **🎯 Auto Best Move** — Best move arrow and square highlights are always displayed on the board.
-- **🔥 Endgame Boost** — When fewer than 10 pieces remain, analysis depth automatically increases to **30** (vs. 18 normally) for stronger endgame play.
-- **📥 Game Import** — Fetch your recent games from **Lichess** or **Chess.com** by username.
-- **🏹 Engine Arrows** — SVG arrows overlay the board showing the best move (green) and second-best continuation (blue).
-- **📋 Interactive Move List** — Chess.com-style clickable notation panel with move navigation. Custom (variation) moves are highlighted in blue alongside the original game moves.
-- **⚡ Play Best Move** — One-click button to play the engine's top suggestion on the board.
-- **🔵 Legal Move Dots** — Click or hover on a piece to see legal move indicators, just like Chess.com.
-- **⌨️ Keyboard Navigation** — Use `←` / `→` arrow keys to step through moves.
+- **🌐 Tri-Engine Analysis** — Queries the **Lichess Cloud** and **Chess-api.com** first for instant, high-depth cached evaluations, then gracefully falls back to a massive local **Stockfish WASM** engine running in a Web Worker.
+- **📊 Live Evaluation Bar** — Visual eval bar tracking the centipawn advantage in real-time.
+- **🎯 Auto Best Move** — Best move arrows and expected responses are drawn directly on the board.
+- **📥 Game Import** — Fetch your recent games instantly from **Lichess** or **Chess.com** by username.
+- **💡 Smart Move Annotations** — Evaluates every move as you play through a game. Automatically detects and flags **Blunders (`!!`)**, **Mistakes (`?`)**, and **Missed Mates (`!`)** directly in the notation list if a player drops a significant advantage.
+- **📋 Interactive Move List** — Clickable notation panel with move navigation and inline variation branching support.
+- **🔵 Legal Move Dots** — Click or hover on a piece to see legal move indicators.
+- **⌨️ Keyboard Navigation** — Use `←` / `→` arrow keys to rapidly step through moves.
 
 ## 🛠️ Tech Stack
 
@@ -30,8 +28,8 @@ A premium, browser-based chess analysis tool that combines **Lichess Cloud Engin
 | **Styling**  | [Tailwind CSS](https://tailwindcss.com/) (Play CDN) + Vanilla CSS |
 | **Board**    | [Chessboard.js](https://chessboardjs.com/) |
 | **Logic**    | [Chess.js](https://github.com/jhlywa/chess.js) |
-| **Engine**   | [Stockfish WASM](https://github.com/nicholasgasior/stockfish.wasm) (runs locally in a Web Worker) |
-| **Cloud**    | [Lichess Cloud Eval API](https://lichess.org/api#tag/Analysis) |
+| **Engine**   | [Stockfish WASM](https://github.com/nicholasgasior/stockfish.wasm) (Web Worker) |
+| **Cloud APIs**| [Lichess Cloud Eval](https://lichess.org/api#tag/Analysis) / [Chess-api.com](https://chess-api.com/) / [Lichess Explorer](https://explorer.lichess.org/) |
 
 ## 🚀 Getting Started
 
@@ -88,3 +86,7 @@ chess/
 ## 📝 License
 
 This project is for personal/educational use. Stockfish is licensed under the [GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html).
+
+## 🙏 Acknowledgements
+
+A massive thank you to [**Chess-api.com**](https://chess-api.com/) and **Lichess** for providing incredibly robust, free, open-access endpoints that make the instant cloud-analysis features of this project possible. Their commitment to open chess developer tools is deeply appreciated.
