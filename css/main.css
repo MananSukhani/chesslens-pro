@@ -1,0 +1,147 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: #161512;
+    color: #ffffff;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.glass {
+    background: rgba(49, 46, 43, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.eval-bar-container {
+    width: 14px;
+    flex: 1;
+    min-height: 200px;
+    background: #1a1816;
+    border-radius: 7px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.eval-bar-fill {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background: linear-gradient(to top, #ffffff, #e0e0e0);
+    transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 0 0 6px 6px;
+}
+
+/* Custom Chessboard.js styling */
+.board-b72b1 {
+    border: 4px solid #312e2b !important;
+    border-radius: 12px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.notation-322f9 {
+    color: #888 !important;
+    font-size: 10px !important;
+    font-weight: bold;
+}
+
+/* Animations */
+@keyframes pulse-glow {
+
+    0%,
+    100% {
+        opacity: 0.5;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+}
+
+.animate-pulse-slow {
+    animation: pulse-glow 3s infinite ease-in-out;
+}
+
+.shadow-3xl {
+    box-shadow: 0 35px 60px -15px rgba(0, 0, 0, 0.6);
+}
+
+.shadow-glow {
+    box-shadow: 0 0 20px rgba(129, 182, 76, 0.2);
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(129, 182, 76, 0.5);
+}
+
+/* Ensure Chessboard.js pieces are visible and on top */
+.piece-417db {
+    z-index: 100 !important;
+    opacity: 1 !important;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+    /* Adds depth to pieces */
+}
+
+/* Highlight squares */
+.highlight1-32417,
+.highlight2-b0dbf {
+    box-shadow: inset 0 0 3px 3px yellow;
+}
+
+/* Last move highlight */
+.highlight-lastmove {
+    background-color: rgba(255, 170, 0, 0.35) !important;
+}
+
+/* Best move highlight */
+.highlight-bestmove {
+    background-color: rgba(129, 182, 76, 0.35) !important;
+    box-shadow: inset 0 0 8px rgba(129, 182, 76, 0.3);
+}
+
+/* Source piece highlight */
+.highlight-source {
+    background-color: rgba(255, 255, 100, 0.4) !important;
+}
+
+/* Legal move dot indicator */
+.legal-dot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 28%;
+    height: 28%;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.25);
+    pointer-events: none;
+    z-index: 50;
+}
+
+/* Capture indicator — ring instead of dot */
+.legal-dot-capture {
+    width: 90%;
+    height: 90%;
+    background: transparent;
+    border: 5px solid rgba(0, 0, 0, 0.25);
+    border-radius: 50%;
+}
