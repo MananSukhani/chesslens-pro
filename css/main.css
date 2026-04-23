@@ -4,8 +4,10 @@ body {
     font-family: 'Inter', sans-serif;
     background-color: #161512;
     color: #ffffff;
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 .glass {
@@ -177,9 +179,9 @@ body.light-mode .notation-322f9 {
 /* ===== Mobile Responsive ===== */
 @media (max-width: 640px) {
     body {
-        overflow-y: auto;
         height: auto;
         min-height: 100vh;
+        min-height: 100dvh;
     }
 
     .board-b72b1 {

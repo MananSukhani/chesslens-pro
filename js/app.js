@@ -168,17 +168,17 @@ const ChessboardComponent = ({ fen, onMove, lastMove, bestMove, getLegalMoves })
 };
 
 const Header = () => html`
-    <nav className="flex items-center justify-between px-8 py-4 glass sticky top-0 z-50">
-        <div className="flex items-center gap-4">
+    <nav className="flex items-center justify-between px-3 sm:px-8 py-3 sm:py-4 glass sm:sticky sm:top-0 z-50">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <div className="w-10 h-10 bg-chess-accent rounded-xl flex items-center justify-center shadow-glow">
                 <${Icon} name="shield" size=${24} className="text-white" />
             </div>
-            <div>
-                <h1 className="text-xl font-bold tracking-tight text-white">ChessLens <span className="text-[10px] text-chess-accent ml-1 px-1.5 py-0.5 border border-chess-accent rounded uppercase font-black">PRO</span></h1>
-                <p className="text-[10px] text-gray-400 font-medium tracking-widest uppercase">Universal Cloud Analyzer</p>
+            <div className="min-w-0">
+                <h1 className="text-base sm:text-xl font-bold tracking-tight text-white truncate">ChessLens <span className="text-[10px] text-chess-accent ml-1 px-1.5 py-0.5 border border-chess-accent rounded uppercase font-black">PRO</span></h1>
+                <p className="text-[9px] sm:text-[10px] text-gray-400 font-medium tracking-widest uppercase truncate">Universal Cloud Analyzer</p>
             </div>
         </div>
-        <div className="flex items-center gap-6 text-sm font-medium text-gray-500">
+        <div className="hidden sm:flex items-center gap-6 text-sm font-medium text-gray-500">
             <div className="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/10">
                 <div className="w-2 h-2 rounded-full bg-chess-accent animate-pulse"></div>
                 <span className="text-[10px] font-bold text-gray-300 uppercase tracking-tighter">100% Cloud Active</span>
@@ -495,7 +495,19 @@ const MoveList = ({ mainLineNotations, currentMoveIndex, onGoToMove, variationSt
     useEffect(() => {
         if (listRef.current) {
             const active = listRef.current.querySelector('.move-active');
-            if (active) active.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            if (active) {
+                const listEl = listRef.current;
+                const activeTop = active.offsetTop;
+                const activeBottom = activeTop + active.offsetHeight;
+                const visibleTop = listEl.scrollTop;
+                const visibleBottom = visibleTop + listEl.clientHeight;
+
+                if (activeTop < visibleTop) {
+                    listEl.scrollTo({ top: activeTop - 8, behavior: 'smooth' });
+                } else if (activeBottom > visibleBottom) {
+                    listEl.scrollTo({ top: activeBottom - listEl.clientHeight + 8, behavior: 'smooth' });
+                }
+            }
         }
     }, [currentMoveIndex]);
 
@@ -1333,7 +1345,7 @@ const App = () => {
     };
 
     return html`
-        <div className=${`h-screen flex flex-col overflow-hidden ${darkMode ? 'bg-[#0f0e0c]' : 'bg-[#f0ede8]'}`}>
+        <div className=${`min-h-[100dvh] lg:h-screen flex flex-col overflow-hidden ${darkMode ? 'bg-[#0f0e0c]' : 'bg-[#f0ede8]'}`}>
             <${Header} />
             <${SettingsPanel} isOpen=${settingsOpen} onClose=${() => setSettingsOpen(false)} manualDepth=${manualDepth} setManualDepth=${setManualDepth} darkMode=${darkMode} setDarkMode=${setDarkMode} />
             <main className="flex-1 w-full mx-auto px-2 sm:px-4 lg:px-8 py-2 flex flex-col lg:flex-row gap-3 lg:gap-6 max-w-[1600px] min-h-0 overflow-y-auto lg:overflow-hidden">
