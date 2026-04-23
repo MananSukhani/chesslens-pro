@@ -495,7 +495,19 @@ const MoveList = ({ mainLineNotations, currentMoveIndex, onGoToMove, variationSt
     useEffect(() => {
         if (listRef.current) {
             const active = listRef.current.querySelector('.move-active');
-            if (active) active.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            if (active) {
+                const listEl = listRef.current;
+                const activeTop = active.offsetTop;
+                const activeBottom = activeTop + active.offsetHeight;
+                const visibleTop = listEl.scrollTop;
+                const visibleBottom = visibleTop + listEl.clientHeight;
+
+                if (activeTop < visibleTop) {
+                    listEl.scrollTo({ top: activeTop - 8, behavior: 'smooth' });
+                } else if (activeBottom > visibleBottom) {
+                    listEl.scrollTo({ top: activeBottom - listEl.clientHeight + 8, behavior: 'smooth' });
+                }
+            }
         }
     }, [currentMoveIndex]);
 
